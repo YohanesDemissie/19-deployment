@@ -19,13 +19,13 @@ Auth.methods.generatePasswordHash = function (password) {
   return bcrypt.hash(password, 10)
     .then(hash => this.password = hash)
     .then(() => this)
-    .catch(error => error);
+    .catch(err => err);
 };
 
 Auth.methods.comparePasswordHash = function (password) {
   return new Promise((resolve, reject) => {
-    bcrypt.compare(password, this.password, (error, valid) => {
-      if (error) return reject(error);
+    bcrypt.compare(password, this.password, (err, valid) => {
+      if (err) return reject(err);
       if (!valid) return reject(new Error('Authorization failed. Password invalid.'));
       resolve(this);
     });
@@ -43,10 +43,10 @@ Auth.methods.generateCompareHash = function () {
 Auth.methods.generateToken = function () {
   return this.generateCompareHash()
     .then(compareHash => {
+      // console.log(compareHash)
       return jwt.sign({ token: compareHash }, process.env.APP_SECRET)
-
     })
-    .catch(error => error);
+    .catch(err => err);
 };
 
 module.exports = mongoose.model('auth', Auth);

@@ -2,7 +2,7 @@
 
 const mongoose = require('mongoose');
 
-const Gallery = mongoose.Schema({ //our constructor for username, description, and userID
+const Gallery = mongoose.Schema({
   name: {
     type: String,
     required: true,

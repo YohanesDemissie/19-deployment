@@ -3,48 +3,64 @@
 const fs = require('fs');
 const del = require('del');
 const path = require('path');
-const Gallery = require('./gallery');
 const mongoose = require('mongoose');
-const tempDir = `${__dirname}`; //points to our temp .git keep directory
+const tempDir = `${__dirname}/../temp`;
 const awsS3 = require('../lib/aws-s3');
 
 const Photo = mongoose.Schema({
-  name: {type: String, required: true},
-  description: {type: String, required: true},
-  userId: {type: mongoose.Schema.Types.ObjectId, ref: 'auth', required: true},
-  galleryId: {type: mongoose.Schema.Types.ObjectId, ref: 'gallery', required: true},
-  objectKey: {type: String, required: true, unique: true},
-  imageURI: {type: String, required: true, unique: true},
+  name: { type: String, required: true },
+  desc: { type: String, required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'auth', required: true },
+  galleryId: { type: mongoose.Schema.Types.ObjectId, ref: 'gallery', required: true },
+  objectKey: { type: String, required: true, unique: true },
+  imageURI: { type: String, required: true, unique: true },
 });
 
-Photo.statics.upload = function (request) {
+
+Photo.statics.upload = function (req) {
   return new Promise((resolve, reject) => {
-    if(!request.file) return reject(new Error('Multi-part Form Data Error. File Not PResent On Request'));
-    if(!request.file.path) return reject(new Error('Multi-part Form Data Error. File Path Not PResent On Request'));
+    if (!req.file) return reject(new Error('Multi-part Form Data Error. File not present on request.'));
+    if (!req.file.path) return reject(new Error('Multi-part Form Data Error. File path not present on request.'));
 
     let params = {
-      ACL: 'public read',
+      ACL: 'public-read',
       Bucket: process.env.AWS_BUCKET,
-      Key: `${request.file.filename}${path.extname(request.file.originalname)}`, //setting the file name
-      Body: fs.createReadStream(request.file.path),
+      Key: `${req.file.filename}${path.extname(req.file.originalname)}`,
+      Body: fs.createReadStream(req.file.path),
     };
-    return awsS3.uploadProm(params) //ships all the data to s3
+
+    return awsS3.uploadProm(params)
       .then(data => {
-        del([`${tempDir}/${request.file.filename}`]); //sotres temporary binary data. del is short for fs.link. Kind of works as a middleware to check on what data has been processed
+        del([`${tempDir}/${req.file.filename}`]);
 
         let photoData = {
-          name: request.body.name,
-          description: request.body.description,
-          userId: request.user._id,
-          galleryId: request.body.galleryId,
+          name: req.body.name,
+          desc: req.body.desc,
+          userId: req.user._id,
+          galleryId: req.body.galleryId,
           imageURI: data.Location,
           objectKey: data.Key,
         };
+
         resolve(photoData);
       })
       .catch(reject);
   });
 };
-//Photos.methods.delete
+
+
+// Photo.methods.delete = function () {
+//   new Promise((resolve, reject) => {
+//     let params = {
+//       Bucket: process.env.AWS_BUCKET,
+//       Key: this.objectKey,
+//     };
+
+//     return awsS3.deleteProm(params)
+//       .then(() => this.remove())
+//       .then(resolve)
+//       .catch(reject);
+//   });
+//};
 
 module.exports = mongoose.model('photo', Photo);

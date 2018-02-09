@@ -1,7 +1,7 @@
 {
-  "name": "01-basic-auth",
+  "name": "19-deployment",
   "version": "1.0.0",
-  "description": "",
+  "description": "new deployment method",
   "main": "index.js",
   "directories": {
     "lib": "lib"
@@ -57,5 +57,13 @@
     "jest": "^22.1.4",
     "jest-cli": "^22.1.4",
     "superagent": "^3.8.2"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YohanesDemissie/19-deployment.git"
+  },
+  "bugs": {
+    "url": "https://github.com/YohanesDemissie/19-deployment/issues"
+  },
+  "homepage": "https://github.com/YohanesDemissie/19-deployment#readme"
 }

@@ -9,77 +9,73 @@ const ERROR_MESSAGE = 'Authorization Failed';
 
 
 module.exports = router => {
-
   router.route('/gallery/:id?')
-    .post(bearerAuthMiddleware, bodyParser, (request, response) => { //update our user database
-      //do I have a user in my request?
-      //TODO: Add error checking
+    .post(bearerAuthMiddleware, bodyParser, (req, res) => {
+      // do I have a user in my req?
+      // TODO: Add error checking
 
-      request.body.userId = request.user._id;
-      //console.log(request.user);
+      req.body.userId = req.user._id;
+      // console.log(req.user);
 
-      return new Gallery(request.body).save()
-        .then(createdGallery => response.status(201).json(createdGallery))
-        .catch(error => errorHandler(error, response));
+      return new Gallery(req.body).save()
+        .then(createdGallery => res.status(201).json(createdGallery))
+        .catch(error => errorHandler(error, res));
     })
 
-    .get(bearerAuthMiddleware, (request, response) => {
-      //returns one gallery
-      //TODO: add extra checks
-      if (request.params._id) {
-        return Gallery.findById(request.params._id)
-          .then(gallery => response.status(200).json(gallery))
-          .catch(error => errorHandler(error, response));
+    .get(bearerAuthMiddleware, (req, res) => {
+      // returns one gallery
+      // TODO: add extra checks
+      if (req.params._id) {
+        return Gallery.findById(req.params._id)
+          .then(gallery => res.status(200).json(gallery))
+          .catch(error => errorHandler(error, res));
       }
 
-      //returns all the galleries
+      // returns all the galleries
       return Gallery.find()
         .then(galleries => {
           let galleriesIds = galleries.map(gallery => gallery._id);
 
-          response.status(200).json(galleriesIds);
+          res.status(200).json(galleriesIds);
         })
-        .catch(error => errorHandler(error, response));
+        .catch(error => errorHandler(error, res));
     })
-    .put(bearerAuthMiddleware, bodyParser, (request, response) => {
+    .put(bearerAuthMiddleware, bodyParser, (req, res) => {
       Gallery.findOne({
-        userId: request.user._id,
-        _id: request.params.id,
+        userId: req.user._id,
+        _id: req.params.id,
       })
+        // .then(/* could do some error handling here as well */)
         .then(gallery => {
-          console.log('gallery route', gallery);
-          if(!gallery) return Promise.reject(new Error('Authorization Error'));
-          return gallery.set(request.body).save();
+          // console.log('gallery route', gallery)
+          if (!gallery) return Promise.reject(new Error('Authorization Error.'));
+          return gallery.set(req.body).save();
         })
-        .then(() => response.sendStatus(204))
-        .catch(error => errorHandler(error, response))
+        .then(() => res.sendStatus(204))
+        .catch(error => errorHandler(error, res));
 
-        // Gallery.findById(request.params._id)
-        // .then(gallery => {
-        //   if (gallery.userId.toString() === request.user._id.toString()) {
-        //     gallery.name = request.body.name || gallery.name;
-        //     gallery.description = request.body.description || gallery.description;
-        //     return gallery.save();
-        //   }
-        //   return errorHandler(new Error(ERROR_MESSAGE), response)
-        // })
-      //   return gallery.save();
-      // }
+      // Gallery.findById(req.params._id)
+      // .then(gallery => {
+      //   if(gallery.userId.toString() === req.user._id.toString()){
+      //     gallery.name = req.body.name || gallery.name;
+      //     gallery.description = req.body.description || gallery.description;
 
-      //return errorHandler(new Error(ERROR_MESSAGE), response);
-        //})
+      //     return gallery.save();
+      //   }
 
+      //   return errorHandler(new Error(ERROR_MESSAGE),res);
+      // })
     })
 
-    .delete(bearerAuthMiddleware, (request, response) => {
-      return Gallery.findById(request.params._id)
+    .delete(bearerAuthMiddleware, (req, res) => {
+      return Gallery.findById(req.params._id)
         .then(gallery => {
-          if (gallery.userId.toString() === request.user._id.toString())
+          if (gallery.userId.toString() === req.user._id.toString())
             return gallery.remove();
 
-          return errorHandler(new Error(ERROR_MESSAGE), response);
+          return errorHandler(new Error(ERROR_MESSAGE), res);
         })
-        .then(() => response.sendStatus(204))
-        .catch(error => errorHandler(error, response));
+        .then(() => res.sendStatus(204))
+        .catch(error => errorHandler(error, res));
     });
 };
